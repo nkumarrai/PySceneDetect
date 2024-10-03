@@ -35,18 +35,6 @@ def _mean_pixel_distance(left: numpy.ndarray, right: numpy.ndarray) -> float:
     return (numpy.sum(numpy.abs(left.astype(numpy.int32) - right.astype(numpy.int32))) / num_pixels)
 
 
-def _mean_hue_distance(left: numpy.ndarray, right: numpy.ndarray) -> float:
-    """Return the mean average distance in pixel values between `left` and `right`.
-    Both `left and `right` should be 2 dimensional 8-bit images of the same shape.
-    """
-    assert len(left.shape) == 2 and len(right.shape) == 2
-    assert left.shape == right.shape
-    num_pixels: float = float(left.shape[0] * left.shape[1])
-    abs_diff = numpy.abs(left.astype(numpy.int32) - right.astype(numpy.int32))
-    circular_diff = numpy.minimum(abs_diff, 180 - abs_diff)
-    return numpy.sum(circular_diff) / num_pixels
-
-
 def _estimated_kernel_size(frame_width: int, frame_height: int) -> int:
     """Estimate kernel size based on video resolution."""
     # TODO: This equation is based on manual estimation from a few videos.
@@ -177,7 +165,7 @@ class ContentDetector(SceneDetector):
             return 0.0
 
         score_components = ContentDetector.Components(
-            delta_hue=_mean_hue_distance(hue, self._last_frame.hue),
+            delta_hue=_mean_pixel_distance(hue, self._last_frame.hue),
             delta_sat=_mean_pixel_distance(sat, self._last_frame.sat),
             delta_lum=_mean_pixel_distance(lum, self._last_frame.lum),
             delta_edges=(0.0 if edges is None else _mean_pixel_distance(
